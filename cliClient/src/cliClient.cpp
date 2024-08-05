@@ -93,6 +93,10 @@ std::string lua::lget(std::string apiPath, std::string apiParams) {
 	std::string ret;
 	auto res = GLOBAL_CLIENT->get(apiPath, Json::parse(apiParams, jsonError));
 	ret = res->body;
+	if(ret.empty()) {
+		ret = format("{\"status\":\"%d\"}", res->status);
+		return ret;
+	}
 	ret.pop_back();
 	ret.append(format(",\"status\":\"%d\"", res->status));
 	ret.append("}");
@@ -104,6 +108,10 @@ std::string lua::lpost(std::string apiPath, std::string apiParams) {
 	std::string ret;
 	auto res = GLOBAL_CLIENT->post(apiPath, Json::parse(apiParams, jsonError));
 	ret = res->body;
+	if(ret.empty()) {
+		ret = format("{\"status\":\"%d\"}", res->status);
+		return ret;
+	}
 	ret.pop_back();
 	ret.append(format(",\"status\":\"%d\"", res->status));
 	ret.append("}");

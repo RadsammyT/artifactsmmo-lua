@@ -31,7 +31,7 @@ struct client {
 
 struct args {
 	std::string scriptfile;
-	std::string schema;
+	std::string schema = "127.0.0.1:6969";
 	bool help;
 	void parseArgs(int argc, char** argv);
 
