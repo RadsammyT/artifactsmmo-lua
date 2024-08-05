@@ -1,2 +1,2 @@
 client:
-	g++ **.cpp -o bin/client -L./external/lua -llua
+	g++ src/*.cpp -g3 -o bin/client -Lsrc/external/lua -l:liblua.a 
