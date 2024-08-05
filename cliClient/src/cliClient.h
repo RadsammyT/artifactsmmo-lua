@@ -53,6 +53,7 @@ namespace lua {
 
 	std::string lget(std::string apiPath, std::string apiParams);
 	std::string lpost(std::string apiPath, std::string apiParams);
+	void lsleep(float seconds);
 }
 
 template<typename ... Args>

@@ -11,6 +11,9 @@ Sends a GET request to the CLI server with the specified path and parameters. A 
 ### `arti:post(path: string, param: table) -> table`
 Sends a POST request to the CLI server with the specified path and parameters. A special key is added, "status", which is the HTTP return code.
 
+### `arti.sleep(seconds: number)`
+Halts execution of script for the specified number of seconds. It will sleep accurately up to the milliseconds of the number specified.
+
 ## `json` - simple json parsing/stringify library
 A pure-Lua json library I yoinked from [this github gist](https://gist.github.com/tylerneylon/59f4bcf316be525b30ab) by tylerneylon on Github.
 

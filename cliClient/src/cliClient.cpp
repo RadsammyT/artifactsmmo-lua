@@ -1,11 +1,13 @@
 #include "cliClient.h"
 #include "external/LuaBridge.h"
 #include "external/lua/lauxlib.h"
+#include <chrono>
 #include <climits>
 #include <exception>
 #include <iostream>
 #include <optional>
 #include <string>
+#include <thread>
 
 httplib::Result client::get(std::string apiPath, Json apiParams) {
 	auto res = httpCli.Get("/get", {
@@ -82,6 +84,7 @@ void lua::setupCliLibs(client &cli) {
 			.addFunction("str_post", lpost)
 			.addFunction("get", lget) // placeholder function
 			.addFunction("post", lpost) // placeholder function
+			.addFunction("sleep", lsleep)
 		.endNamespace();
 	if(!luaL_dostring(cli.lua, lualib::ARTIFACTLIB.c_str()) == LUA_OK) {
 		luaL_error(cli.lua, "setupCliLibs@ARTIFACTLIB: %s\n", lua_tostring(cli.lua, -1));
@@ -116,6 +119,10 @@ std::string lua::lpost(std::string apiPath, std::string apiParams) {
 	ret.append(format(",\"status\":\"%d\"", res->status));
 	ret.append("}");
 	return ret;
+}
+
+void lua::lsleep(float seconds) {
+	std::this_thread::sleep_for(std::chrono::milliseconds((int)(seconds*1000)));
 }
 
 #pragma GCC diagnostic ignored "-Wformat-security"
