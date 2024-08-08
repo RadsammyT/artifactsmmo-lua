@@ -10,32 +10,50 @@
 #include <thread>
 
 httplib::Result client::get(std::string apiPath, Json apiParams) {
+	retry:
 	auto res = httpCli.Get("/get", {
 		{"api-path", apiPath},
 		{"api-params", apiParams.dump()}
 	});
 	if((int)res.error()) {
-		printf("ERROR! On path %s of params %s, got code %d", apiPath.c_str(),
+		printf("ERROR! On path %s of params %s, got code %d\n", apiPath.c_str(),
 				apiParams.dump().c_str(), (int)res.error());
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		goto retry;
+	} else if(res->body.find("<html>") != std::string::npos) {
+		// Finding an HTML tag in a supposedly JSON body means
+		// that we got a cloudflare/API server error (returning an HTML doc).
+		// so we should treat it like an httplib error
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		goto retry;
 	}
 	return res;
 }
 
 httplib::Result client::post(std::string apiPath, Json apiParams) {
+	retry:
 	auto res = httpCli.Post("/post", {
 		{"api-path", apiPath}
 	}, apiParams.dump(), "application/json");
 	if((int)res.error()) {
-		printf("ERROR! On path %s of params %s, got code %d", apiPath.c_str(),
+		printf("ERROR! On path %s of params %s, got code %d\n", apiPath.c_str(),
 				apiParams.dump().c_str(), (int)res.error());
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		goto retry;
+	} else if(res->body.find("<html>") != std::string::npos) {
+		// See above comment at client::get.
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		goto retry;
 	}
+
 	return res;
 }
 
 void args::parseArgs(int argc, char** argv) {
 	enum {
 		SCRIPT,
-		SVRHOST
+		SVRHOST,
+		SCRIPTARGS
 	};
 	int mode = SCRIPT;
 	for(int i = 0; i < argc; i++) {
@@ -46,6 +64,15 @@ void args::parseArgs(int argc, char** argv) {
 		}
 		if(arg == "-h" || arg == "--help") {
 			printf("%s\n", this->HELP_STRING.c_str());
+			std::exit(0);
+			continue;
+		}
+		if(arg == "--") {
+			mode = SCRIPTARGS;
+			continue;
+		}
+		if(mode == SCRIPTARGS) {
+			scriptargs.push_back(arg);
 			continue;
 		}
 		if(mode == SCRIPT) {
@@ -74,7 +101,7 @@ void SET_CLIENT_POINTER(client *addr) {
 	GLOBAL_CLIENT = addr;
 }
 
-void lua::setupCliLibs(client &cli) {
+void lua::setupCliLibs(client &cli, args &args) {
 	if(!luaL_dostring(cli.lua, lualib::JSONLUA.c_str()) == LUA_OK) {
 		luaL_error(cli.lua, "setupCliLibs@JSONLUA: %s\n", lua_tostring(cli.lua, -1));
 	}
@@ -85,6 +112,7 @@ void lua::setupCliLibs(client &cli) {
 			.addFunction("get", lget) // placeholder function
 			.addFunction("post", lpost) // placeholder function
 			.addFunction("sleep", lsleep)
+			.addVariable("args", args.scriptargs)
 		.endNamespace();
 	if(!luaL_dostring(cli.lua, lualib::ARTIFACTLIB.c_str()) == LUA_OK) {
 		luaL_error(cli.lua, "setupCliLibs@ARTIFACTLIB: %s\n", lua_tostring(cli.lua, -1));
@@ -95,14 +123,18 @@ std::string lua::lget(std::string apiPath, std::string apiParams) {
 	std::string jsonError;
 	std::string ret;
 	auto res = GLOBAL_CLIENT->get(apiPath, Json::parse(apiParams, jsonError));
-	ret = res->body;
-	if(ret.empty()) {
-		ret = format("{\"status\":\"%d\"}", res->status);
-		return ret;
+	if(res.error() == httplib::Error::Success) {
+		ret = res->body;
+		if(ret.empty()) {
+			ret = format("{\"status\":\"%d\"}", res->status);
+			return ret;
+		}
+		ret.pop_back();
+		ret.append(format(",\"status\":\"%d\"", res->status));
+		ret.append("}");
+	} else {
+		ret = "{\"status\":\"500\"}";
 	}
-	ret.pop_back();
-	ret.append(format(",\"status\":\"%d\"", res->status));
-	ret.append("}");
 	return ret;
 }
 
@@ -110,14 +142,19 @@ std::string lua::lpost(std::string apiPath, std::string apiParams) {
 	std::string jsonError;
 	std::string ret;
 	auto res = GLOBAL_CLIENT->post(apiPath, Json::parse(apiParams, jsonError));
-	ret = res->body;
-	if(ret.empty()) {
-		ret = format("{\"status\":\"%d\"}", res->status);
-		return ret;
+	if(res.error() == httplib::Error::Success) {
+		ret = res->body;
+		if(ret.empty()) {
+			ret = format("{\"status\":\"%d\"}", res->status);
+			return ret;
+		}
+		ret.pop_back();
+		ret.append(format(",\"status\":\"%d\"", res->status));
+		ret.append("}");
+	} else {
+		ret = "{\"status\":\"500\"}";
 	}
-	ret.pop_back();
-	ret.append(format(",\"status\":\"%d\"", res->status));
-	ret.append("}");
+
 	return ret;
 }
 

@@ -32,6 +32,7 @@ struct client {
 struct args {
 	std::string scriptfile;
 	std::string schema = "127.0.0.1:6969";
+	std::vector<std::string> scriptargs;
 	bool help;
 	void parseArgs(int argc, char** argv);
 
@@ -48,7 +49,7 @@ void SET_CLIENT_POINTER(client* addr);
 
 namespace lua {
 	Json Table2Json(luabridge::LuaRef& ref);
-	void setupCliLibs(client& cli);
+	void setupCliLibs(client& cli, args& args);
 	void run(std::string filename);
 
 	std::string lget(std::string apiPath, std::string apiParams);

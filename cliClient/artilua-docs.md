@@ -24,7 +24,8 @@ Quoting from the gist:
 
  >- They only have string or number keys. Number keys must be represented as
    strings in json; this is part of the json spec.
- - They are not recursive. Such a structure cannot be specified in json.
+
+> - They are not recursive. Such a structure cannot be specified in json.
 
 >A Lua table is considered to be an array if and only if its set of keys is a
 consecutive sequence of positive integers starting at 1. Arrays are encoded like

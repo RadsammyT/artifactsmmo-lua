@@ -52,6 +52,13 @@ bool cliServer::certifyAuth() {
 	return true;
 }
 
+std::string truncateIfLarge(std::string in, int code) {
+	if(in.size() >= 80 && code == httplib::OK_200) {
+		return "TRUNCATED";
+	}
+	return in;
+}
+
 void cliServer::serverSetup() {
 	// api-path: string - the path to forward to the api
 	// api-params: string(json) - the URL params to forward to the api URL
@@ -66,20 +73,29 @@ void cliServer::serverSetup() {
 				path.append(i.first.c_str());
 				path.append("=");
 				path.append(i.second.string_value().c_str());
+				path.push_back('&');
 			}
+			path.pop_back();
 		}
-		printf("got get req: %s\n", path.c_str());
 		auto result = client.Get(path, {
 			{"Accept", "application/json"},
 			{"Authorization", AUTHMAP}
 		});
-		if(result->status == httplib::TemporaryRedirect_307) {
-			//std::this_thread::sleep_for(2000ms);
-			//goto retry;
+		if(result.error() == httplib::Error::Success) {
+			res.status = result->status;
+			res.body = result->body;
+		} else {
+			Json error = Json::object {
+				{"error", "cliServer: HTTPLIB ERROR, ENUM #" + std::to_string((int)result.error())}
+			};
+			res.status = httplib::InternalServerError_500;
+			res.body = error.dump();
 		}
-		res.status = result->status;
-		res.body = result->body;
+		printf("got get req: %s\n", path.c_str());
 		printf("got status %d\n", res.status);
+		printf("got status %d\n", res.status);
+		printf("of body %s\n", truncateIfLarge(res.body, res.status).c_str());
+		printf("---------------------------------\n");
 	});
 
 	// api-path: string - the path to forward to the api 
@@ -87,16 +103,27 @@ void cliServer::serverSetup() {
 	server.Post("/post", [this](const httplib::Request& req, httplib::Response& res){
 		std::string jsonError;
 		auto path = req.get_header_value("api-path");
-		printf("got post req: %s\n", path.c_str());
-		printf("of body: %s\n", req.body.c_str());
 		auto result = client.Post(path,
 				{
 					{"Authorization", AUTHMAP}
 				},
 				req.body, "application/json");
-		res.status = result->status;
-		res.body = result->body;
+		if(result.error() == httplib::Error::Success) {
+			res.status = result->status;
+			res.body = result->body;
+		} else {
+			Json error = Json::object {
+				{"error", "cliServer: HTTPLIB ERROR, ENUM #" + std::to_string((int)result.error())}
+			};
+			printf("ERROR: HTTPLIB ENUM ERROR %d\n", ((int)result.error()));
+			res.status = httplib::InternalServerError_500;
+			res.body = error.dump();
+		}
+		printf("got post req: %s\n", path.c_str());
+		printf("of body: %s\n", req.body.c_str());
 		printf("got status %d\n", res.status);
+		printf("of body %s\n", truncateIfLarge(res.body, res.status).c_str());
+		printf("---------------------------------\n");
 	});
 	server.listen("127.0.0.1", 6969);
 }

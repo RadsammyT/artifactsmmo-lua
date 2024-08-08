@@ -16,10 +16,7 @@ int main(int argc, char** argv) {
 	args.parseArgs(argc, argv);
 	client cli(args.schema);
 	SET_CLIENT_POINTER(&cli);
-	lua::setupCliLibs(cli);
-	luaL_dostring(cli.lua, R"(
-		print('hello world from lua in C++') 
-	)");
+	lua::setupCliLibs(cli, args);
 	if(luaL_dofile(cli.lua, args.scriptfile.c_str()) != LUA_OK) {
 		luaL_error(cli.lua, "SCRIPT ERROR: %s\n", lua_tostring(cli.lua, -1));
 	}
