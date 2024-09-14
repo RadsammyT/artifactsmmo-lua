@@ -1,0 +1,26 @@
+[
+  {
+    "arguments": [
+      "/usr/lib64/ccache/g++",
+      "-c",
+      "-o",
+      "bin/client",
+      "cliClient.cpp"
+    ],
+    "directory": "/home/radsammyt/programming/artifactsMMO/cliClient",
+    "file": "/home/radsammyt/programming/artifactsMMO/cliClient/cliClient.cpp",
+    "output": "/home/radsammyt/programming/artifactsMMO/cliClient/bin/client"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/g++",
+      "-c",
+      "-o",
+      "bin/client",
+      "main.cpp"
+    ],
+    "directory": "/home/radsammyt/programming/artifactsMMO/cliClient",
+    "file": "/home/radsammyt/programming/artifactsMMO/cliClient/main.cpp",
+    "output": "/home/radsammyt/programming/artifactsMMO/cliClient/bin/client"
+  }
+]
