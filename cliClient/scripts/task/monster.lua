@@ -181,7 +181,7 @@ local fn = {}
 			end
 			utils.awaitCooldown(moveToTMM)
 			local newTask = arti:post(string.format("/my/%s/action/task/new", charName))
-			utils.awaitCooldown(newTask)
+			utils.awaitCooldown(newTask, {"489"})
 			charInfo = arti:get(string.format("/characters/%s", charName));
 		end
 		local taskProgress = tonumber(charInfo["data"]["task_progress"])

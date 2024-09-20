@@ -47,7 +47,12 @@ function PrintTable(t, f)
       io.output(io.stdout)
    end
 end
-function utils.awaitCooldown(actionTable)
+function utils.awaitCooldown(actionTable, ignoreStatuses)
+	if ignoreStatuses ~= nil then
+		for _,v in ipairs(ignoreStatuses) do
+			if actionTable.status == tostring(v) then return end
+		end
+	end
 	if actionTable["IGNORE"] ~= nil then
 		return
 	end
