@@ -21,7 +21,7 @@ httplib::Result client::get(std::string apiPath, Json apiParams) {
 				apiParams.dump().c_str(), (int)res.error());
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		goto retry;
-	} else if(res->status >= 500 && res->status <= 599) {
+	} else if(res->body.find('<') != std::string::npos) {
 		// Finding an HTML tag in a supposedly JSON body means
 		// that we got a cloudflare/API server error (returning an HTML doc).
 		// so we should treat it like an httplib error
@@ -41,7 +41,7 @@ httplib::Result client::post(std::string apiPath, Json apiParams) {
 				apiParams.dump().c_str(), (int)res.error());
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		goto retry;
-	} else if(res->status >= 500 && res->status <= 599) {
+	} else if(res->body.find('<') != std::string::npos) {
 		// See above comment at client::get.
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		goto retry;
