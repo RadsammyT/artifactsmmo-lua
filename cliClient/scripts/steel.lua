@@ -64,6 +64,7 @@ function Main()
 			end
 			local amtMined = 0
 			amtMined = utils.getItemCount(CHAR_NAME, GetItemFromResource(key))
+			::FUCKEDUP::
 			local tile = utils.findMap(key, "resource", CHAR_NAME)
 			local moveTo = arti:post(f("/my/%s/action/move", CHAR_NAME), tile)
 			if moveTo.status ~= "200" then
@@ -77,6 +78,7 @@ function Main()
 				if mineResource.status ~= "200" then
 					print("ERROR: unable to mine")
 					if mineResource.status == "497" then utils:DepositAll(CHAR_NAME) end
+					if mineResource.status == "598" then goto FUCKEDUP end
 					PrintTable(mineResource)
 				else
 					amtMined = amtMined + 1
