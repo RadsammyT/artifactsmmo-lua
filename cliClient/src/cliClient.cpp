@@ -25,6 +25,7 @@ httplib::Result client::get(std::string apiPath, Json apiParams) {
 		// Finding an HTML tag in a supposedly JSON body means
 		// that we got a cloudflare/API server error (returning an HTML doc).
 		// so we should treat it like an httplib error
+		printf("GET-ERROR: Illegal condition met\n%s\n", res->body.c_str());
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		goto retry;
 	}
@@ -43,6 +44,7 @@ httplib::Result client::post(std::string apiPath, Json apiParams) {
 		goto retry;
 	} else if(res->body.find('<') != std::string::npos) {
 		// See above comment at client::get.
+		printf("GET-ERROR: Illegal condition met\n%s\n", res->body.c_str());
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		goto retry;
 	}
